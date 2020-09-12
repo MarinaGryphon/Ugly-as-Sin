@@ -31,8 +31,8 @@ class UaS_Consumable : HDWeapon {
 		Inventory.Icon "HSCVA0";
 		Inventory.PickupSound "weapons/pocket";
 		Inventory.MaxAmount 500;
-		hdweapon.nicename "Consumable";
-		hdweapon.fitsinbackpack true;
+		tag "Consumable Food Item";
+		+hdweapon.fitsinbackpack;
 		//hdweapon.refid UAS_HDLD_CONSUME;
 		+INVENTORY.INVBAR;
 		+INVENTORY.PERSISTENTPOWER;
@@ -59,7 +59,7 @@ class UaS_Consumable : HDWeapon {
 	void ConsumableReady() {
 		//Message header
 		string message;
-		message = "===\cj"..nicename.."\c-===\n\n";
+		//message = "===\cj"..tag.."\c-===\n\n";
 		message = message..description.."\n\n\n";
 		if (bLIQUID) { message = message.."\cn"..fluid.."ml\c-\n\n\n"; }
 		else { message = message.."\ce"..energy.."kcal\c-\n\n\n"; }
