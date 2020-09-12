@@ -1,256 +1,91 @@
 extend class UaS_AI_Handler {
-	UaS_Monster_Flashlight monsterlight;
-	int	Recheck;
-	double activateChance;
-	bool Flashing;
+	UaS_LaserLightModule llm;
+	int	recheck;
+	bool flashing;
 	int flashrate;
-	int minlightlevel;
 
 	void Flashlight() {
+		if (globalfreeze || level.Frozen) { return; }
 		// Only do light for human-type classes
-		bool validClass = (
-			owner.CheckClass("ZombieStormtrooper", AAPTR_DEFAULT, true) ||
-			owner.CheckClass("HideousShotgunGuy", AAPTR_DEFAULT, true) ||
-			owner.CheckClass("DragonGuard", AAPTR_DEFAULT, true) ||
-			owner.CheckClass("HDMarine", AAPTR_DEFAULT, true)
+		bool BotClass = (
+			owner is "HERPBot" ||
+			owner is "DERPBot"
 		);
-		if (!validClass) { return; }
+		bool HumanClass = (
+			owner is "ZombieStormtrooper" ||
+			owner is "HideousShotgunGuy" ||
+			owner is "VulcanetteGuy" ||
+			owner is "HDMarine"
+		);
+		if (!BotClass && !HumanClass) { return; }
 
-		// Toss and disconnect if owner dies
-		if (owner.health <= 0) {
-			if (monsterLight) {
-				monsterLight.vel.x = frandom(-5, 5);
-				monsterLight.vel.y = frandom(-5, 5);
-				monsterLight.vel.z = frandom(2, 5);
-				monsterLight.rot.a = frandom(-75, 75);
-				monsterLight.rot.p = frandom(-25, 25);
-				monsterLight.followTarget = null;
-				monsterLight = null;
-			}
-			// Abort since owner dead.
-			return;
+		if (!owner.FindInventory("UaS_LaserLightModule")) {
+			owner.giveinventory("UaS_LaserLightModule", 1);
+			llm = UaS_LaserLightModule(owner.FindInventory("UaS_LaserLightModule"));
+			llm.ModeSwitch(random[aillm](0,2));
 		}
 
-		// Create new light if owner alive and there isn't one.
-		if (!monsterlight) {
-			monsterlight = UaS_Monster_Flashlight(actor.spawn("UaS_Monster_Flashlight", owner.pos, false));
-			monsterlight.followTarget = owner;
-			if (UaS.RandomChance(0.5)) {
-				monsterLight.laser = false;
-				monsterLight.brightness = 1.0;
-			}
-			else {
-				monsterLight.laser = true;
-				monsterLight.laserColor = "RED";
-				if (owner.bFRIENDLY == true) { monsterLight.laserColor = "GREEN"; }
-			}
-		}
-
-		// Point down if not aiming
-		if (owner.frame != 4 && owner.frame != 5) { monsterlight.offsetPitch = 35; }
-		else { monsterlight.offsetPitch = 0; }
-
-		if(!UaS_AI_Flashlights) {
-			monsterlight.active = false;
-			return;
-		}
-
-		if (recheck <= 0) {
+		if (HumanClass && recheck <= 0) {
+			llm.offset = 8;
+			// sample light from ahead of monster
 			FLineTraceData lookSpot;
 			owner.LineTrace(owner.angle, 256, owner.pitch, TRF_THRUACTORS, owner.height * 0.75, data: lookSpot);
-			double lightlevel = lookSpot.HitSector.LightLevel;
-			minlightlevel = 128;
-			if (monsterlight.laser) { minlightlevel = 512; }
-			activateChance = (lightlevel / minlightlevel);
-			monsterlight.active = false;
-			if (frandom(0, 1) >= activateChance) { monsterlight.active = true; }
-			recheck = max(random(35,175), lightlevel );
-			flashrate = random(1, 4);
+			double lightlevel = (lookSpot.HitSector.LightLevel + owner.cursector.lightlevel) / 2;
+
+			// More likely to activate in darker areas
+			if (random[aillm](0,192) > lightlevel) { llm.activated = true; }
+			else { llm.activated = false; }
+
+			// misc other adjustments
+			flashrate = random[aillm](2, 4);
+			recheck = max(random[aillm](35, 175), lightlevel); // recheck more often in darker areas
+			if (random[aillm](0,1) > 0.75) { llm.ModeSwitch(random[aillm](0,2)); }
+			if (random[aillm](0,128) > lightlevel) { llm.ModeSwitch(randompick[aillm](0,2)); }
 		}
 
-		Flashing = (owner.target &&
-			owner.CheckClass("HDMarine", AAPTR_DEFAULT, true) &&
-			(owner.frame == 4 || owner.frame == 5) &&
-			monsterlight.laser == false
+		if (owner is "HERPBot") {
+			llm.ModeSwitch(1);
+			llm.activated = true;
+			llm.offset = 8;
+		}
+
+		if (owner is "DERPBot") {
+			llm.ModeSwitch(0);
+			llm.activated = true;
+			llm.offset = 2;
+		}
+
+		// Some bools
+		bool isowneraiming = (
+			owner.frame ==  4 || owner.frame ==  5 ||
+			owner.frame == 23 || owner.frame == 24
+		);
+		flashing = (
+			owner.target &&
+			isowneraiming &&
+			(llm.mode == 0 || llm.mode == 2)
 		);
 
-		if (Flashing && level.maptime & flashrate == 0) { monsterlight.active = !monsterlight.active; }
+		if (flashing && level.maptime & flashrate) { llm.ToggleSwitch(); }
+
+		// Handle random light movement
+		if ((level.maptime % 10 == 0) && !BotClass) {
+			if (owner.target && !(owner.target is "UaS_LastKnownMarker")) {
+				llm.angleoffset = frandom[ai](-35, 35);
+				llm.pitchoffset = frandom[ai](-25, 25);
+				//if (!isowneraiming) { llm.pitchoffset += 10; }
+			}
+			else if (random[ai](0, 1) == 0) {
+				llm.angleoffset = frandom[ai](-20, 20);
+				llm.pitchoffset = frandom[ai](-10, 10);
+				//if (!isowneraiming) { llm.pitchoffset += 20; }
+			}
+		}
+		if (isowneraiming && flashing) {
+			llm.angleoffset = 0;
+			llm.pitchoffset = 0;
+		}
 
 		recheck--;
-
-	}
-}
-
-struct rotationInfo {
-	double a;
-	double p;
-	double r;
-}
-
-class UaS_Monster_Flashlight_Light : DynamicLight {
-	default {
-		DynamicLight.Type "Point";
-		+DYNAMICLIGHT.ATTENUATE;
-		+DYNAMICLIGHT.SPOT
-	}
-
-	override void PostBeginPlay() {
-		super.PostBeginPlay();
-		args[DynamicLight.LIGHT_RED] = 255;
-		args[DynamicLight.LIGHT_GREEN] = 255;
-		args[DynamicLight.LIGHT_BLUE] = 255;
-		args[DynamicLight.LIGHT_INTENSITY] = 128;
-		SpotInnerAngle = 15;
-		SpotOuterAngle = 35;
-	}
-}
-
-class UaS_Monster_Laserdot : DynamicLight {
-	default {
-		DynamicLight.Type "Point";
-	}
-
-	override void PostBeginPlay() {
-		super.PostBeginPlay();
-		args[DynamicLight.LIGHT_INTENSITY] = 2;
-	}
-}
-
-
-class UaS_Monster_Flashlight : Actor {
-	actor followTarget;
-	rotationinfo rot;
-	vector3 targetPos;
-	rotationInfo targetRot;
-	bool targetKilled;
-	actor actualLight;
-	bool active;
-	int offsetAngle, offsetPitch;
-	double brightness;
-	color laserColor;
-	bool laser;
-	actor laserdot;
-
-	default {
-		radius 2;
-		height 4;
-		+THRUACTORS;
-		+NOBLOCKMONST;
-		+ROLLSPRITE;
-		+FORCEXYBILLBOARD;
-		scale 1;
-		friction 0.1;
-		RenderStyle "Add";
-	}
-
-	override void Tick() {
-		super.Tick();
-
-		// Update rotation/pitcj
-		A_SetAngle(angle + (rot.a / 4), true);
-		A_SetPitch(pitch + (rot.p / 4), true);
-
-		roll += (rot.a + rot.p);
-
-		// Handle held or loose light
-		if (followTarget) {
-			targetpos = followTarget.vec3Angle(6 * cos(followtarget.pitch),
-				followTarget.angle,
-				(6 * sin(followtarget.pitch)) + followTarget.height * 0.75, false);
-			targetRot.a = followTarget.angle + offsetAngle;
-			targetRot.p = followTarget.pitch + offsetPitch;
-			vel.x += DampedSpring(pos.x, targetpos.x, vel.x, 0.5, 0.75);
-			vel.y += DampedSpring(pos.y, targetpos.y, vel.y, 0.5, 0.75);
-			vel.z += DampedSpring(pos.z, targetpos.z, vel.z, 0.5, 0.75);
-			rot.a += DampedSpring(angle, targetRot.a, rot.a, 0.5, 0.4) + (frandom(-3, 3) + frandom(-2, 2) + frandom(-1, 1)) / 3;
-			rot.p += DampedSpring(pitch, targetRot.p, rot.p, 0.5, 0.4) + (frandom(-3, 3) + frandom(-2, 2) + frandom(-1, 1)) / 3;
-		}
-		else {
-			if (laserdot) { laserdot.Destroy(); }
-			brightness += frandom(brightness * -0.1, brightness * 0.1);
-			brightness = clamp(brightness * 0.999, 0, 1);
-			if (brightness <= 0.1) {
-				if (actuallight) { actualLight.destroy(); }
-				destroy();
-				return;
-			}
-			if (pos.z - floorz <= 0) {
-				rot.a *= 0.95;
-				vel.xy += RotateVector(vel.xy, angle - rot.a);
-				rot.p = 0;
-				pitch = 0;
-			}
-		}
-
-		switch(active) {
-			case true:
-				if (laser == TRUE) {
-					// Draw laser
-					FLineTraceData laserTrace;
-					LineTrace(angle, 8192, pitch, TRF_THRUACTORS, data: laserTrace);
-					for (double d = 8; d < laserTrace.distance; d = d + frandom(2.0, d / 128)) {
-						A_SpawnParticle(laserColor, SPF_FULLBRIGHT|SPF_RELANG,
-							1, frandom(1.0, 2.0) + (d/1024), 0,
-							cos(pitch) * cos(angle) * d, cos(pitch) * sin(angle) * d, sin(-pitch) * d,
-							-rot.a * cos(pitch) * sin(angle) * (d/256), rot.a * cos(pitch) * cos(angle) * (d/256), -rot.p * cos(pitch) * (d/256),
-							0, 0, 0,
-							frandom(0.5, 1.0), -1, 0);
-					}
-					double dotdist = laserTrace.distance - 1;
-					vector3 dotpos = ((cos(pitch) * cos(angle) * dotdist), (cos(pitch) * sin(angle) * dotdist), (sin(-pitch) * dotdist)); // relative!
-					// Laserdot
-					if (!laserdot) {
-						laserdot = actor.spawn("UaS_Monster_Laserdot", pos + dotpos, false);
-						laserdot.args[DynamicLight.LIGHT_RED] = lasercolor.r;
-						laserdot.args[DynamicLight.LIGHT_GREEN] = lasercolor.g;
-					}
-					laserdot.SetOrigin(pos + dotpos, true);
-					A_SpawnParticle(laserColor, SPF_FULLBRIGHT|SPF_RELANG,
-						1, 2, 0,
-						dotpos.x, dotpos.y, dotpos.z,
-						frandom(-0.1, 0.1), frandom(-0.1, 0.1), frandom(-0.1, 0.1),
-						0, 0, 0,
-						0.9, -1, 0);
-				}
-				else {
-					SetStateLabel("LightOn");
-					if (!actualLight) {
-						actualLight = actor.spawn("UaS_Monster_Flashlight_Light", pos, false);
-						actualLight.target = self;
-					}
-					actualLight.A_SetAngle(angle, true);
-					actualLight.A_SetPitch(pitch, true);
-					actualLight.args[DynamicLight.LIGHT_INTENSITY] = 128 * brightness;
-					// Draw flashlight particle beam
-					for (double d = 1; d < 48; d = d + (d / 2)) {
-						A_SpawnParticle("White", SPF_FULLBRIGHT|SPF_RELANG,
-							1, (sin(35) * d * 8), 0,
-							cos(pitch) * cos(angle) * d, cos(pitch) * sin(angle) * d, sin(-pitch) * d,
-							vel.x, vel.y, vel.z,
-							0, 0, 0,
-							(4.0 * brightness) / (d ** 2), 0, 0);
-					}
-				}
-				break;
-			case false:
-				SetStateLabel("LightOff");
-				if (actualLight) { actualLight.Destroy(); }
-				if (laserdot) { laserdot.Destroy(); }
-				break;
-		}
-	}
-
-	states {
-		Spawn:
-			TNT1 A 0;
-		LightOn:
-			TNT1 A 35 BRIGHT;
-		LightOff:
-			TNT1 A 35;
-			loop;
-	}
-
-	double DampedSpring(double p, double r, double v, double k, double d) {
-		return -(d * v) - (k * (p - r));
 	}
 }

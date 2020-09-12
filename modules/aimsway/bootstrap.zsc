@@ -1,0 +1,118 @@
+class UaS_Aim_Thinker : Thinker {
+	HDPlayerPawn plr;
+
+	override void Tick() {
+		if(!plr) { return; }
+		if (UaS_FocusZoomEnabled) { FocusZoom(); }
+		if (UaS_AimSwayEnabled) { AimSway(); }
+	}
+
+	// https://gist.github.com/caligari87/39d1cec3aad776860b4148cc3c659f70
+	double DampedSpring(double p, double r, double v, double k, double d) { return -(d * v) - (k * (p - r)); }
+}
+
+extend class UaS_Aim_Thinker {
+	// focus-zooming external default variables
+	double zoomdefault;
+	double zoomtarget;
+	double zoomcurrent;
+	double zoomspring;
+	int zoomdelay;
+	transient cvar focusmode;
+	transient cvar playerfov;
+
+	// focus-zooming internal variables
+	double zoomspeed;
+	int zoomcountdown;
+
+	void FocusZoom() {
+		// Cache cvar struct
+		if (!focusmode) { focusmode=CVar.GetCVar("UaS_FocusZoomMode", plr.player); }
+		if (!playerfov) { playerfov=CVar.GetCVar("fov", plr.player); }
+
+		// Ensure a brief delay before focus zoom takes effect
+		if(plr.vel.length() <= 1) { zoomcountdown = max(zoomcountdown - 1, 1); }
+		else { zoomcountdown = zoomdelay; }
+
+		// Determine focus mode
+		bool DoZoom = false;
+		switch (focusmode.GetInt()) {
+			case 0:
+				DoZoom = (plr.isFocussing);
+				break;
+			case 1:
+				DoZoom = (plr.player.cmd.buttons & BT_ZOOM);
+				break;
+			case 2:
+				DoZoom = (plr.player.cmd.buttons & BT_USE);
+				break;
+		}
+
+		// Focus if mode true and delay runout
+		if((DoZoom) && zoomcountdown < zoomdelay) {
+			zoomspeed += dampedspring(
+				zoomcurrent,
+				zoomtarget,
+				zoomspeed,
+				zoomspring / (zoomcountdown),
+				1.0);
+			zoomcurrent += zoomspeed;
+		}
+		else {
+			zoomspeed += dampedspring(
+				zoomcurrent,
+				zoomdefault,
+				zoomspeed,
+				zoomspring,
+				1.0);
+			zoomcurrent += zoomspeed;
+		}
+
+		// Hopefully this respects players FOV setting appropriately
+		// Thanks Josh for figuring out that we should use the player's FOV CVar
+		plr.player.desiredfov = playerfov.GetFloat() * zoomcurrent;
+	}
+}
+
+extend class UaS_Aim_Thinker {
+	// aim offseting variables
+	vector2 aimoffset;
+	vector2 aimswayrandom;
+	vector2 aimswayrandomspeed;
+
+	void AimSway() {
+		// Get player mouse input and add to offset
+		vector2 playerlook = (-plr.player.cmd.yaw, -plr.player.cmd.pitch) * 0.005;
+		aimoffset += playerlook;
+
+		// add random jitter
+		aimoffset += RandomSway() * 0.125;
+
+		// prevent from going outside bounds
+		aimoffset.x = clamp(aimoffset.x, -45, 45);
+		aimoffset.y = clamp(aimoffset.y, -45, 45);
+
+		// keep in a reasonably sane area
+		aimoffset *= 0.95;
+
+		// recenter for focus and bracing, separately
+		if (plr.isFocussing) { aimoffset *= 0.80; }
+		if (plr.gunbraced) { aimoffset *= 0.90; }
+
+		// apply to player
+		plr.hudbob += aimoffset;
+	}
+
+	vector2 RandomSway() {
+		if (random(1, 2) == 1) {
+			aimswayrandomspeed.x += ((frandom(-1.0, 1.0) + frandom(-1.0, 1.0) + frandom(-1.0, 1.0)) / 3);
+			aimswayrandomspeed.y += ((frandom(-1.0, 1.0) + frandom(-1.0, 1.0) + frandom(-1.0, 1.0)) / 3);
+		}
+
+		if (plr.isFocussing) { aimswayrandomspeed *= 0.25; }
+		if (plr.gunbraced) { aimswayrandomspeed *= 0.0; }
+
+		aimswayrandomspeed *= 0.9;
+		return aimswayrandomspeed;
+	}
+}

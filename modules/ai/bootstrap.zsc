@@ -4,7 +4,7 @@ class UaS_AI_Bootstrap : EventHandler {
 	override void WorldThingSpawned(WorldEvent e) {
 		if(!e.Thing) { return; }
 		if(!UaS_AdvancedAIEnabled) { return; }
-		if(e.Thing.bISMONSTER) {
+		if(e.Thing is 'HDMobBase' || e.Thing is "HERPBot" || e.Thing is "DERPBot") {
 			e.thing.GiveInventory("UaS_AI_Handler", 1);
 			actor givenHandler = e.thing.FindInventory("UaS_AI_Handler");
 			givenHandler.score = givenAIHandlers;
@@ -13,12 +13,5 @@ class UaS_AI_Bootstrap : EventHandler {
 				console.printf("Gave AI tracker "..givenHandler.score.." to "..e.Thing.GetClassName());
 			}
 		}
-	}
-
-	override void PlayerEntered(PlayerEvent e) {
-		PlayerInfo player = players[e.PlayerNumber];
-		if(!UaS_AdvancedAIEnabled) { return; }
-		if(!UaS_AI_Stealth) { return; }
-		player.mo.Giveinventory("UaS_StealthHandler", 1);
 	}
 }

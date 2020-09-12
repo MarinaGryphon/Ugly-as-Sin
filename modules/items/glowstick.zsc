@@ -1,0 +1,116 @@
+extend class UaS_Spawner {
+	void GlowstickSpawns(WorldEvent e) {
+		if(level.maptime > 1) { return; }
+		if(!e.Thing) { return; }
+		if(e.Thing is "Inventory" && Inventory(e.Thing).Owner) { return; }
+
+		bool spawnable = (
+			e.thing.GetClassName() == "HDAmBox" ||
+			e.Thing.GetClassName() == "PortableStimpack" ||
+			e.Thing.GetClassName() == "PortableMedikit" ||
+			e.Thing.GetClassName() == "HDBackpack");
+
+		if(spawnable) {
+			UaS.SpawnStuff('UaS_Glowstick', randompick[glowstick](0, 0, 0, 1), e.Thing.pos);
+		}
+	}
+}
+
+class UaS_Glowstick : HDPickup {
+	bool Activated, Thrown;
+	DynamicLight GlowLight;
+	UaS_Glowstick DroppedGlowStick;
+	int spindir;
+	int brightness;
+	int age;
+
+	Default {
+		Inventory.PickupMessage "Picked up a glowstick.";
+		Inventory.Icon "UGSIB0";
+		HDPickup.Bulk 2;
+		tag "Glowstick";
+		HDPickup.refid UAS_HDLD_GLOWSTICK;
+		-HDPickup.DropTranslation;
+		+HDPickup.FitsInBackpack;
+		+FLATSPRITE;
+		+FORCEXYBILLBOARD;
+		+INVENTORY.IGNORESKILL;
+	}
+
+	override void Tick() {
+		if (Thrown) {
+			vel *= 5;
+			vel.z += 5;
+			Thrown = false;
+		}
+		switch(Activated) {
+			case true:
+				frame = 2;
+				if (level.maptime % 5 == 1) { brightness = min(brightness + 1, 64); }
+				if (level.maptime % 700 == 1) { age++; }
+				if (!GlowLight) {
+					GlowLight = DynamicLight(Actor.Spawn("UaS_GlowstickLight"));
+					GlowLight.args[DynamicLight.LIGHT_RED] = 32;
+					GlowLight.args[DynamicLight.LIGHT_GREEN] = 128;
+					GlowLight.args[DynamicLight.LIGHT_BLUE] = 32;
+				}
+				GlowLight.args[DynamicLight.LIGHT_INTENSITY] = (brightness - age);
+				if (owner) { GlowLight.target = owner; }
+				else { GlowLight.target = self; }
+				break;
+			case false:
+				frame = 1;
+				if (GlowLight) { glowLight.Destroy(); }
+				brightness = 0;
+				age = 0;
+				break;
+		}
+		A_SetAngle(angle + vel.length() * 3 * spindir);
+		super.Tick();
+	}
+
+	override bool Use(bool pickup) {
+		if (!Activated) {
+			owner.A_PlaySound("UaS/Glowstick", CHAN_AUTO, 0.15);
+			Activated = true;;
+		} else { owner.DropInventory(self); }
+		return false;
+	}
+
+	override inventory CreateTossable(int amt) {
+		Thrown = (owner.player.cmd.buttons&BT_ZOOM);
+		DroppedGlowStick = null;
+		DroppedGlowStick = UaS_Glowstick(super.CreateTossable(amt));
+		if (DroppedGlowStick && Activated) {
+			DroppedGlowStick.Activated = true;
+			DroppedGlowstick.Brightness = Brightness;
+			DroppedGlowstick.Age = Age;
+			DroppedGlowstick.Spindir = randompick(-1,1);
+			DroppedGlowstick.Thrown = Thrown;
+			if(owner) { Activated = false; }
+		}
+		//Thrown = false;
+		return DroppedGlowStick;
+	}
+
+	override void actualpickup(actor other){
+		if(Activated)return;
+		super.actualpickup(other);
+	}
+
+	states {
+		Spawn:
+			UGSI B -1;
+			stop;
+	}
+}
+
+class UaS_GlowstickLight : DynamicLight {
+	override void Tick() {
+		super.Tick();
+		if (target) {
+			SetOrigin((target.pos.x, target.pos.y, target.pos.z + target.height/2), true);
+			Prev = target.Prev;
+		}
+	}
+}

@@ -11,7 +11,6 @@ extend class UaS_Looting_Handler {
 	void InitializeLootTables() {
 		// ZombieStormtrooper Loot Table
 		// ZM66 (also ZM66 Jackboot)
-		ZombieStormtrooperZM66Loot.push(UaS_LootEntry.create("FourMilAmmo", 1, 15, 1.0));
 		ZombieStormtrooperZM66Loot.push(UaS_LootEntry.create("HDPistolAmmo", 1, 5, 1.0));
 		ZombieStormtrooperZM66Loot.push(UaS_LootEntry.create("HD4mMag", 1, 1, 0.75));
 		ZombieStormtrooperZM66Loot.push(UaS_LootEntry.create("HD9mMag15", 1, 1, 0.75));
@@ -36,7 +35,6 @@ extend class UaS_Looting_Handler {
 
 		// Marine/Tango Loot Table
 		// ZM66
-		HDMarineZM66Loot.push(UaS_LootEntry.create("FourMilAmmo", 5, 20, 1.0));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HDPistolAmmo", 1, 5, 1.0));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HD4mMag", 1, 1, 0.75));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HD9mMag15", 1, 1, 0.75));
@@ -50,8 +48,6 @@ extend class UaS_Looting_Handler {
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HD7mMag", 1, 1, 0.15));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HD7mClip", 1, 1, 0.15));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("PortableBerserkPack", 1, 1, 0.1));
-		HDMarineZM66Loot.push(UaS_LootEntry.create("GreenArmour", 1, 1, 0.2));
-		HDMarineZM66Loot.push(UaS_LootEntry.create("BlueArmour", 1, 1, 0.1));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("HEATAmmo", 1, 2, 0.1));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("BrontornisRound", 1, 1, 0.1));
 		HDMarineZM66Loot.push(UaS_LootEntry.create("PortableLiteAmp", 1, 1, 0.1));
@@ -77,8 +73,6 @@ extend class UaS_Looting_Handler {
 		HDMarineHunterLoot.push(UaS_LootEntry.create("HD7mMag", 1, 1, 0.15));
 		HDMarineHunterLoot.push(UaS_LootEntry.create("HD7mClip", 1, 1, 0.15));
 		HDMarineHunterLoot.push(UaS_LootEntry.create("PortableBerserkPack", 1, 1, 0.1));
-		HDMarineHunterLoot.push(UaS_LootEntry.create("GreenArmour", 1, 1, 0.2));
-		HDMarineHunterLoot.push(UaS_LootEntry.create("BlueArmour", 1, 1, 0.1));
 		HDMarineHunterLoot.push(UaS_LootEntry.create("HEATAmmo", 1, 2, 0.1));
 		HDMarineHunterLoot.push(UaS_LootEntry.create("BrontornisRound", 1, 1, 0.1));
 		HDMarineHunterLoot.push(UaS_LootEntry.create("PortableLiteAmp", 1, 1, 0.1));
@@ -104,8 +98,6 @@ extend class UaS_Looting_Handler {
 		HDMarineSMGLoot.push(UaS_LootEntry.create("HD7mMag", 1, 1, 0.15));
 		HDMarineSMGLoot.push(UaS_LootEntry.create("HD7mClip", 1, 1, 0.15));
 		HDMarineSMGLoot.push(UaS_LootEntry.create("PortableBerserkPack", 1, 1, 0.1));
-		HDMarineSMGLoot.push(UaS_LootEntry.create("GreenArmour", 1, 1, 0.2));
-		HDMarineSMGLoot.push(UaS_LootEntry.create("BlueArmour", 1, 1, 0.1));
 		HDMarineSMGLoot.push(UaS_LootEntry.create("HEATAmmo", 1, 2, 0.1));
 		HDMarineSMGLoot.push(UaS_LootEntry.create("BrontornisRound", 1, 1, 0.1));
 		HDMarineSMGLoot.push(UaS_LootEntry.create("PortableLiteAmp", 1, 1, 0.1));
@@ -129,8 +121,6 @@ extend class UaS_Looting_Handler {
 		HDMarineRocketLoot.push(UaS_LootEntry.create("HD7mMag", 1, 1, 0.15));
 		HDMarineRocketLoot.push(UaS_LootEntry.create("HD7mClip", 1, 1, 0.15));
 		HDMarineRocketLoot.push(UaS_LootEntry.create("PortableBerserkPack", 1, 1, 0.1));
-		HDMarineRocketLoot.push(UaS_LootEntry.create("GreenArmour", 1, 1, 0.2));
-		HDMarineRocketLoot.push(UaS_LootEntry.create("BlueArmour", 1, 1, 0.1));
 		HDMarineRocketLoot.push(UaS_LootEntry.create("HEATAmmo", 1, 2, 0.1));
 		HDMarineRocketLoot.push(UaS_LootEntry.create("BrontornisRound", 1, 1, 0.1));
 		HDMarineRocketLoot.push(UaS_LootEntry.create("PortableLiteAmp", 1, 1, 0.1));

@@ -2,18 +2,13 @@ server bool UaS_HungerEnabled = false;
 server float UaS_HungerTimeScale = 20;
 server float UaS_HungerRationRate = 1.0;
 user bool UaS_HungerAutoselect = true;
-server bool UaS_HungerStart = true;
 
 server bool UaS_ScarcityEnabled = false;
 server int UaS_ScarcityRate = 50;
 server float UaS_ScarcityOverspawn = 0.5;
+server bool UaS_ScarcityDisableDrops = false;
 
-server bool UaS_ReloaderEnabled = false;
-server bool UaS_ReloaderAutoContinue = false;
-
-server bool UaS_SlingEnabled = false;
 user int UaS_SlingDelay = 35;
-server bool UaS_SlingStart = true;
 
 server bool UaS_FragReducerEnabled = false;
 server int UaS_FragSpawnRate = 100;
@@ -28,10 +23,15 @@ server bool UaS_AI_Wounding = true;
 server bool UaS_AI_Flashlights = true;
 server bool UaS_AI_Stealth = true;
 
-server bool UaS_IncapEnabled = false;
-server bool UaS_IncapWoundClamp = true;
-
 server bool UaS_LootingEnabled = false;
 server float UaS_LootingFactor = 0.5;
 
+server bool UaS_VisWepsEnabled = false;
+
 server int UaS_Debug = 0;
+
+server bool UaS_FocusZoomEnabled = false;
+server int UaS_FocusZoomMode = 0;
+server bool UaS_AimSwayEnabled = false;
+
+server noarchive bool UaS_YOLO = false;

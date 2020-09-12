@@ -10,6 +10,12 @@ OptionValue "UaS_Nice_Timescales" {
 	60,  "60x Realtime"
 }
 
+OptionValue "FocusModes" {
+	0, 	"Focus key"
+	1,	"Zoom key only"
+	2,	"Use key only"
+}
+
 AddOptionMenu "OptionsMenu" {
 	StaticText " "
 	Submenu "Ugly as Sin Settings", "UaS_Options"
@@ -30,14 +36,6 @@ OptionMenu "UaS_Options" {
 	SubMenu "Settings and Info", "UaS_Scarcity_Options"
 	StaticText " "
 
-	//Option "Reloading Kit","UaS_ReloaderEnabled","OnOff"
-	//SubMenu "Settings and Info", "UaS_Reloader_Options"
-	//StaticText " "
-
-	Option "Weapon Sling","UaS_SlingEnabled","OnOff"
-	SubMenu "Settings and Info", "UaS_Sling_Options"
-	StaticText " "
-
 	Option "Fragshard Reducer","UaS_FragReducerEnabled","OnOff"
 	SubMenu "Settings and Info", "UaS_Frag_Options"
 	StaticText " "
@@ -50,13 +48,18 @@ OptionMenu "UaS_Options" {
 	SubMenu "Settings and Info", "UaS_AI_Options"
 	StaticText " "
 
-	Option "Incapacitation","UaS_IncapEnabled","OnOff"
-	SubMenu "Settings and Info", "UaS_Incap_Options"
-	StaticText " "
-
 	Option "Corpse Looting","UaS_LootingEnabled","OnOff"
 	SubMenu "Settings and Info", "UaS_Looting_Options"
 	StaticText " "
+
+	Option "Visual Weapons","UaS_VisWepsEnabled","OnOff"
+	SubMenu "Settings and Info", "UaS_VisWep_Options"
+	StaticText " "
+
+	Option "Focus Zoom","UaS_FocusZoomEnabled","OnOff"
+	Option "Focus Zoom Mode","UaS_FocusZoomMode","FocusModes"
+	Option "Aim Sway","UaS_AimSwayEnabled","OnOff"
+	Control "Toggle Laser/Flashlight Module", "use UaS_LaserLightModule"
 
 	StaticText "Changing module configuration mid-game may cause"
 	StaticText "unpredictable results. A new game is recommended when"
@@ -74,7 +77,6 @@ OptionMenu "UaS_Hunger_Options" {
 	Option "Timescale","UaS_HungerTimeScale","UaS_Nice_Timescales"
 	Option "Eat/Drink Auto-Select","UaS_HungerAutoselect","OnOff"
 	Slider "Ration Spawn Multiplier","UaS_HungerRationRate", 0, 5, 0.1, 1
-	Option "Start with Messkit/Rations","UaS_HungerStart","OnOff"
 	StaticText "Adds need to eat / drink, with messkit."
 	StaticText "Starvation / dehydration causes fatigue."
 	StaticText " "
@@ -93,11 +95,15 @@ OptionMenu "UaS_Scarcity_Options" {
 	Title "Scarcity Module"
 	ScaleSlider "Scarcity rate","UaS_ScarcityRate", 0, 100, 5, "Disabled"
 	Slider "Overspawn ratio","UaS_ScarcityOverspawn", 0, 1, 0.05, 2
+	Option "Disable drops","UaS_ScarcityDisableDrops","OnOff"
 	StaticText "Removes or reduces map spawns, forcing"
 	StaticText "you to scavenge for your supplies."
 	StaticText " "
 	StaticText "Scarcity controls removal percentage."
 	StaticText "Overspawn controls what's left over."
+	StaticText " "
+	StaticText "Disable drops prevents monsters"
+	StaticText "from dropping ammo or weapons"
 	StaticText " "
 	StaticText "Requires new map or game to take effect."
 }
@@ -113,23 +119,6 @@ OptionMenu "UaS_Reloader_Options" {
 	StaticText " "
 	StaticText "Given to Lib/Boss loadouts on new game,"
 	StaticText "or spawns on those weapons in new map."
-}
-
-OptionMenu "UaS_Sling_Options" {
-	Title "Weapon Sling Options"
-	Option "Spawn with Sling","UaS_SlingStart","OnOff"
-	Slider "Activation Delay","UaS_SlingDelay", 0, 70, 5, 0
-	StaticText "Sling allows bracing weapon anywhere."
-	StaticText " "
-	StaticText "Must first be attached to weapon"
-	StaticText "by using inventory item."
-	StaticText " "
-	StaticText "Once attached, Hold [Zoom] to toggle."
-	StaticText "Delay is how long [Zoom]  must be held."
-	StaticText " "
-	StaticText "Jogging will temporarily disable sling."
-	StaticText "Sprinting will deactivate it entirely."
-	StaticText "Given on start of new game or map."
 }
 
 OptionMenu "UaS_Frag_Options" {
@@ -180,17 +169,6 @@ OptionMenu "UaS_AI_Options" {
 	StaticText "Behaviors can be toggled when AI active."
 }
 
-OptionMenu "UaS_Incap_Options" {
-	Title "Incapacitation Module"
-	Option "Clamp Wounds","UaS_IncapWoundClamp","OnOff"
-	StaticText "Incapacitates players that otherwise"
-	StaticText "Would be killed, allowing revives."
-	StaticText "Co-op multiplayer only!"
-	StaticText " "
-	StaticText "Clamp Wounds prevents wounds and burns"
-	StaticText "from increasing while players are down."
-}
-
 OptionMenu "UaS_Looting_Options" {
 	Title "Corpse Looting Module"
 	Slider "Loot Factor","UaS_LootingFactor", 0.05, 1.0, 0.05, 2
@@ -198,6 +176,15 @@ OptionMenu "UaS_Looting_Options" {
 	StaticText " "
 	StaticText "Loot Factor controls maximum"
 	StaticText "chance for finding loot."
+}
+
+OptionMenu "UaS_VisWep_Options" {
+	Title "Visual Weapons Module"
+	StaticText "Attempts to change marine and tango"
+	StaticText "sprites depending on the current weapon."
+	StaticText " "
+	StaticText "--Disclaimer--"
+	StaticText "This is not guaranteed to always work."
 }
 
 OptionMenu "UaS_Misc_Options" {
