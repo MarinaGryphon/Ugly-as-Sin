@@ -40,7 +40,6 @@ class UaS_WaterPouch : UaS_Consumable {
 		UaS_Consumable.Energy 0;
 		UaS_Consumable.Fluid 500;
 		UaS_Consumable.Bulk 8;
-		UaS_Consumable.Appearance "HSCV", 17; //Sprite name string, frame # (A = 0, B = 1, etc)
 		Inventory.Icon "HSCVR0";
 		+UaS_Consumable.LIQUID;
 	}

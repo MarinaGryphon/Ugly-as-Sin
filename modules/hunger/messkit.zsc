@@ -6,16 +6,13 @@ class UaS_Consumable : HDWeapon {
 	int bulk;
 	int consumableflags;
 	string description;
-	string itemsprite;
 	string opensound;
-	int itemframe;
 	bool opened;
 	float amountleft;
 	property Energy: energy;
 	property Fluid: fluid;
 	property Bulk: bulk;
 	property Description: description;
-	property Appearance: itemsprite, itemframe;
 	property OpenSound: opensound;
 	flagdef Liquid: consumableflags, 0;
 
@@ -24,7 +21,6 @@ class UaS_Consumable : HDWeapon {
 		UaS_Consumable.Fluid 10;
 		UaS_Consumable.Bulk 5;
 		UaS_Consumable.Description "A generic block of vaguely food-like mush. Probably obtained via console commands.";
-		UaS_Consumable.Appearance "HSCV", 0; //Sprite name string, frame # (A = 0, B = 1, etc)
 		UaS_Consumable.OpenSound "UaS/FoodOpen";
 		//+UaS_Consumable.Liquid;
 		Inventory.PickupMessage "Picked up a generic consumable. You really shouldn't have this.";
@@ -45,6 +41,7 @@ class UaS_Consumable : HDWeapon {
 	override void DoEffect() {
 		super.DoEffect();
 		if (!owner.player) { return; }
+		if (!owner.player.readyweapon) { return; }
 		if (!(owner.player.readyweapon.GetClassName() == GetClassName())) {
 			if (opened) {
 				owner.TakeInventory(self.GetClassName(), 1);
@@ -56,13 +53,18 @@ class UaS_Consumable : HDWeapon {
 		if (owner.player.health <= 0) { return; }
 	}
 
-	void ConsumableReady() {
+	void ConsumableStatus() {
 		//Message header
 		string message;
 		//message = "===\cj"..tag.."\c-===\n\n";
 		message = message..description.."\n\n\n";
 		if (bLIQUID) { message = message.."\cn"..fluid.."ml\c-\n\n\n"; }
 		else { message = message.."\ce"..energy.."kcal\c-\n\n\n"; }
+		A_WeaponMessage(message, 175);
+	}
+
+	/*void ConsumableReady() {
+
 
 		//Input handler
 		switch (opened) {
@@ -81,19 +83,13 @@ class UaS_Consumable : HDWeapon {
 
 		//Warning message appended to end of status
 		message = message.."Opened packages will be discarded even if not fully consumed!";
-		A_WeaponMessage(message, 175);
-	}
+
+	}*/
 
 	States {
 		Spawn:
 			TNT1 A -1 { invoker.UpdateSprite(); }
 			Stop;
-		Ready:
-			TNT1 A 1 {
-				A_WeaponReady(WRF_ALL);
-				invoker.ConsumableReady();
-			}
-			goto super::readyend;
 	}
 
 	override double weaponbulk() {
@@ -106,8 +102,12 @@ class UaS_Consumable : HDWeapon {
 	}
 
 	void UpdateSprite() {
-		sprite = GetSpriteIndex(itemsprite);
-		frame = itemframe;
+		string ic = TexMan.GetName(icon);
+		string sp = ic.Left(4);
+		string fr = ic.Mid(4, 1);
+		//console.printf("sprite "..sp.." frame "..(fr.ByteAt(0)-65));
+		sprite = GetSpriteIndex(sp);
+		frame = (fr.ByteAt(0)-65);
 	}
 
 	//Stolen from HDWeapon and updated slightly to work in this context
