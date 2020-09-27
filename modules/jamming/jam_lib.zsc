@@ -1,0 +1,32 @@
+enum UAS_LIB_CONSTANTS {
+	// Status slots
+	UAS_LIBS_FIRED = 8,
+
+	// Convenience
+	UAS_LIB_CHAMBER_LIVE = 2,
+	UAS_LIB_CHAMBER_SHELL = 1,
+	UAS_LIB_CHAMBER_EMPTY = 0,
+
+	UAS_LIB_JAMTHRESH = 5000,
+};
+
+extend class UaS_WeaponJammer {
+	void LiberatorJamming() {
+		wep = HDWeapon(owner.player.ReadyWeapon);
+		ChamberSlot = LIBS_CHAMBER;
+		MagSlot = LIBS_MAG;
+		HeatSlot = LIBS_HEAT;
+		JamSlot = UAS_LIBS_FIRED;
+		WJ_LIVE = UAS_LIB_CHAMBER_LIVE;
+		WJ_SHELL = UAS_LIB_CHAMBER_SHELL;
+		WJ_EMPTY = UAS_LIB_CHAMBER_EMPTY;
+		JamThresh = UAS_LIB_JAMTHRESH;
+
+		JustFired = ((wep.weaponstatus[ChamberSlot] == WJ_SHELL && OldChamber == WJ_LIVE));
+		JustFed = (
+			(wep.weaponstatus[ChamberSlot] == WJ_LIVE && OldChamber == WJ_SHELL) ||
+			(wep.weaponstatus[ChamberSlot] == WJ_LIVE && OldChamber == WJ_EMPTY)
+		);
+		JustEjected = (JustFired && !JustFed);
+	}
+}

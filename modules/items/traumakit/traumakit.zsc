@@ -2,10 +2,12 @@
 #include "modules/items/traumakit/traumakit_forceps.zsc"
 #include "modules/items/traumakit/traumakit_stapler.zsc"
 #include "modules/items/traumakit/traumakit_sutures.zsc"
+#include "modules/items/traumakit/traumakit_scalpel.zsc"
 #include "modules/items/traumakit/traumakit_biofoam.zsc"
 #include "modules/items/traumakit/traumakit_saline.zsc"
 #include "modules/items/traumakit/traumakit_helptext.zsc"
 #include "modules/items/traumakit/traumakit_pain.zsc"
+#include "modules/items/traumakit/traumakit_supplies.zsc"
 #include "modules/items/traumakit/spawner.zsc"
 
 class UaS_TraumaKit : HDWeapon {
@@ -22,6 +24,7 @@ class UaS_TraumaKit : HDWeapon {
 		Inventory.MaxAmount 1;
 		Inventory.PickupMessage "Picked up a personal trauma kit.";
 		Inventory.Icon "UGSIF0";
+		Inventory.PickupSound "weapons/pocket";
 		+INVENTORY.INVBAR;
 		+INVENTORY.PERSISTENTPOWER;
 		+INVENTORY.IGNORESKILL;
@@ -33,7 +36,16 @@ class UaS_TraumaKit : HDWeapon {
 		scale 0.5;
 		tag "Trauma Kit";
 	}
-	override double weaponbulk(){ return 20; }
+
+	override double weaponbulk(){
+		double b = 0;
+		b += (weaponstatus[TKS_PAINKILLER] / 20) * (ENC_STIMPACK * 0.4);
+		b += (weaponstatus[TKS_SALINE] / 1000) * (ENC_STIMPACK * 2 * 0.8);
+		b += (weaponstatus[TKS_BIOFOAM] / 250) * (6 * 0.6);
+		b += (weaponstatus[TKS_STAPLES] / 25) * (6 * 0.1);
+		b = max(b, 15);
+		return b;
+	}
 
 	states {
 		spawn:
@@ -53,6 +65,7 @@ class UaS_TraumaKit : HDWeapon {
 		WoundList();
 		CycleWounds();
 		CycleTools();
+		HandleSupplies();
 
 		switch (weaponstatus[TK_SELECTED]) {
 			case T_PAINKILLER:
@@ -73,9 +86,9 @@ class UaS_TraumaKit : HDWeapon {
 			case T_SUTURES:
 				HandleSutures();
 				break;
-			/*case T_2F: //Maybe add later
-				Handle2F();
-				break;*/
+			case T_SCALPEL:
+				HandleScalpel();
+				break;
 		}
 
 		if (currentWound) { statusmessage = statusmessage..currentWound.WoundStatus().."\n"; }
@@ -91,7 +104,7 @@ class UaS_TraumaKit : HDWeapon {
 		if (tktrace.hitactor && tktrace.hitactor is "HDPlayerPawn") { other = HDPlayerPawn(tktrace.hitactor); }
 
 		if (other && (owner.player.cmd.buttons & BT_ZOOM)) { patient = other; }
-		if (!patient || !other) { patient = HDPlayerPawn(owner); }
+		if (!patient || levellocals.Vec3Diff(owner.pos, patient.pos).length() > owner.radius * 4) { patient = HDPlayerPawn(owner); }
 
 		wh = UaS_WoundHandler(patient.FindInventory('UaS_WoundHandler'));
 		if (!wh) { console.printf("No wound handler!"); return; }
@@ -137,6 +150,7 @@ class UaS_TraumaKit : HDWeapon {
 	void CycleWounds() {
 		if (!currentWound) { weaponstatus[TK_WOUNDINDEX] = -1; }
 		if (wh.critwounds.size() == 0) { return; }
+		if (!(owner.player.cmd.buttons & BT_FIREMODE)) { return; }
 		if ((owner.player.cmd.buttons & BT_RELOAD) && !(owner.player.oldbuttons & BT_RELOAD)) {
 			weaponstatus[TK_WOUNDINDEX] = (weaponstatus[TK_WOUNDINDEX] + 1) % wh.critwounds.size();
 			currentWound = GetWound(weaponstatus[TK_WOUNDINDEX]);
@@ -149,18 +163,17 @@ class UaS_TraumaKit : HDWeapon {
 	}
 
 	void CycleTools(int set = -1) {
+		if ((owner.player.cmd.buttons & BT_FIREMODE)) { return; }
 		if (set != -1) { weaponstatus[TK_SELECTED] = set; return; }
-		bool pressedaltfire = ((owner.player.cmd.buttons & BT_USER2) && !(owner.player.oldbuttons & BT_USER2));
-		bool holdinguse = ((owner.player.cmd.buttons & BT_USE));
-		if (pressedaltfire && !holdinguse ) {
-			weaponstatus[TK_SELECTED] = (weaponstatus[TK_SELECTED] + 1) % 6;
+		if ((owner.player.cmd.buttons & BT_RELOAD) && !(owner.player.oldbuttons & BT_RELOAD)) {
+			weaponstatus[TK_SELECTED] = (weaponstatus[TK_SELECTED] + 1) % 7;
 			weaponstatus[TK_HOLD] = 0;
 			currentmessage.text = "";
 			currentmessage.timeout = 0;
 		}
-		else if (pressedaltfire && holdinguse) {
+		else if ((owner.player.cmd.buttons & BT_ALTRELOAD) && !(owner.player.oldbuttons & BT_ALTRELOAD)) {
 			weaponstatus[TK_SELECTED] = (weaponstatus[TK_SELECTED] - 1);
-			if(weaponstatus[TK_SELECTED] < 0) { weaponstatus[TK_SELECTED] = 5; }
+			if(weaponstatus[TK_SELECTED] < 0) { weaponstatus[TK_SELECTED] = 6; }
 			weaponstatus[TK_HOLD] = 0;
 			currentmessage.text = "";
 			currentmessage.timeout = 0;
@@ -215,12 +228,20 @@ class UaS_TraumaKit : HDWeapon {
 		T_BIOFOAM,
 		T_STAPLER,
 		T_SUTURES,
+		T_SCALPEL,
 	}
 
 	enum KitFlags {
+		//standard slots
 		TK_SELECTED,
 		TK_BUTTON,
 		TK_HOLD,
-		TK_WOUNDINDEX
+		TK_WOUNDINDEX,
+
+		//supply slots
+		TKS_PAINKILLER,
+		TKS_SALINE,
+		TKS_BIOFOAM,
+		TKS_STAPLES,
 	}
 }
