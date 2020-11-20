@@ -25,6 +25,7 @@ extend class UaS_TraumaKit {
 		}
 
 		if ((owner.player.cmd.buttons & BT_ATTACK)) {
+			if (!HandleStrip()) { return; }
 			if (!(owner.player.oldbuttons & BT_ATTACK)) {
 				weaponstatus[TK_HOLD] = random[uas_tk](20,35);
 				owner.A_StartSound("misc/smallslop", CHAN_WEAPON);
@@ -41,7 +42,7 @@ extend class UaS_TraumaKit {
 
 				// semi-normalized distribution for success check
 				int check = (
-					random[uas_tk](0,100) +
+					random[uas_tk](0,75) +
 					random[uas_tk](0,100)) / 2;
 
 				if (currentWound.inpain(5)) {

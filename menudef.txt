@@ -21,6 +21,10 @@ AddOptionMenu "OptionsMenu" {
 	Submenu "Ugly as Sin Settings", "UaS_Options"
 }
 
+AddOptionMenu "HDOptionsMenu" after "HDControlsMenu" {
+	Submenu "Ugly as Sin Settings", "UaS_Options"
+}
+
 // ---------------
 // Main Options
 // ---------------
@@ -63,6 +67,7 @@ OptionMenu "UaS_Options" {
 	Option "Flashlight Beams", "UaS_FlashlightParticles", "OnOff"
 	Option "Death Fading", "UaS_DeathFade", "OnOff"
 	Option "Weapon Jamming", "UaS_JammingEnabled", "OnOff"
+	Option "Replace ammoboxes", "UaS_ReplaceAmmoboxes", "OnOff"
 
 	StaticText "Changing module configuration mid-game may cause"
 	StaticText "unpredictable results. A new game is recommended when"

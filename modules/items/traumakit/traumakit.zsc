@@ -16,6 +16,7 @@ class UaS_TraumaKit : HDWeapon {
 	WoundInfo currentWound;
 	UaS_WoundHandler wh;
 	HDPlayerPawn patient, lastpatient;
+	transient cvar autostrip;
 
 	Default {
 		radius 4;
@@ -29,6 +30,7 @@ class UaS_TraumaKit : HDWeapon {
 		+INVENTORY.PERSISTENTPOWER;
 		+INVENTORY.IGNORESKILL;
 		+WEAPON.NO_AUTO_SWITCH;
+		+hdweapon.fitsinbackpack;
 		//+WEAPON.NOAUTOFIRE;
 		weapon.slotpriority 0.5;
 		weapon.slotnumber 9;
@@ -95,6 +97,33 @@ class UaS_TraumaKit : HDWeapon {
 
 		TickMessages();
 		A_WeaponMessage(statusMessage);
+	}
+
+	// Somewhat copied from HD, largely rewritten
+	bool HandleStrip() {
+		if (!autostrip) { autostrip = CVar.GetCVar("hd_autostrip", owner.player); }
+		string itemname, imperative;
+		// check for worn items, otherwise exit early
+		if(patient.countinv("WornRadsuit")) { itemname = "environment suit "; }
+		else if(patient.countinv("HDArmourWorn")) { itemname = "armour "; }
+		else { return true; }
+
+		// check owner or other
+		if(patient == owner) {
+			imperative = "Take off your ";
+			//handle autostrip
+			if(autostrip.GetBool()) {
+				HDPlayerPawn.CheckStrip(owner, -1);
+				return false;
+			}
+		}
+		else {
+			imperative = "Have them take off their ";
+		}
+		// display message
+		currentmessage.text = imperative..itemname.."first!\n";
+		currentmessage.timeout = 2*35;
+		return false;
 	}
 
 	void SetPatient() {
